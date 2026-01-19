@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from pymongo.read_concern import ReadConcern
@@ -21,10 +20,11 @@ async def client():
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
 
-@asynccontextmanager
-async def rollback_session():
-    client = get_client()
-    async with await client.start_session() as session:
+@pytest_asyncio.fixture
+async def rollback():
+    """Wraps test in a transaction that rolls back after completion."""
+    mongo_client = get_client()
+    async with await mongo_client.start_session() as session:
         session.start_transaction(
             read_concern=ReadConcern("snapshot"),
             write_concern=WriteConcern("majority"),
@@ -32,6 +32,6 @@ async def rollback_session():
         )
         async with session_context(session):
             try:
-                yield session
+                yield
             finally:
                 await session.abort_transaction()
