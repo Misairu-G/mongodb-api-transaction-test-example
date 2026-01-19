@@ -32,4 +32,7 @@ clean:  ## Stop services, remove volumes, images, and Python artifacts
 rebuild: clean up  ## Clean and rebuild everything
 
 test:  ## Run all tests
+	set -a && \
+	. ./.env && \
+	set +a && \
 	pytest -v
