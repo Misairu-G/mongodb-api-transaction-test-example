@@ -5,7 +5,7 @@ Import this module once at startup before using any Document.
 import functools
 import inspect
 from beanie import Document
-from app.context import get_current_session
+from src.context import get_current_session
 
 # Methods that accept a 'session' parameter
 PATCHED_METHODS = [
@@ -21,7 +21,6 @@ PATCHED_METHODS = [
     "get",
     "insert_many",
     "delete_all",
-    "count",
 ]
 
 def _wrap_method(original):

@@ -1,20 +1,19 @@
-import os
 from contextlib import asynccontextmanager
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from pymongo.read_concern import ReadConcern
 from pymongo.write_concern import WriteConcern
 from pymongo.read_preferences import ReadPreference
-from app.context import session_context
-from app.db import get_client, init_db
-from app.main import app
+from src.context import session_context
+from src.database import get_client, init_db
+from src.config import MONGO_URI, MONGO_DB
+from src.main import app
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/?replicaSet=rs0")
-MONGO_DB = os.getenv("MONGO_DB", "test_db")
+TEST_DB = f"test_{MONGO_DB}"
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def _init_beanie_once():
-    await init_db(MONGO_URI, MONGO_DB)
+    await init_db(MONGO_URI, TEST_DB)
 
 @pytest_asyncio.fixture
 async def client():

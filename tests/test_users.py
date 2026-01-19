@@ -1,5 +1,5 @@
 import pytest
-from app.models import User
+from src.users.models import User
 from conftest import rollback_session
 
 @pytest.mark.asyncio
