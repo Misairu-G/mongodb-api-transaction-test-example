@@ -7,50 +7,76 @@ import inspect
 from beanie import Document
 from src.context import get_current_session
 
-# Methods that accept a 'session' parameter
-PATCHED_METHODS = [
+# Async methods that accept a 'session' parameter
+ASYNC_METHODS = [
     # Instance methods
     "insert",
     "save",
     "replace",
     "delete",
     # Class methods
-    "find",
     "find_one",
-    "find_all",
     "get",
     "insert_many",
     "delete_all",
 ]
 
-def _wrap_method(original):
-    """Wrap a method to auto-inject session from context if not provided."""
+# Sync methods that return query builders (session passed to find, propagates to to_list/count)
+SYNC_QUERY_METHODS = [
+    "find",
+    "find_all",
+]
+
+
+def _wrap_async_method(original):
+    """Wrap an async method to auto-inject session from context if not provided."""
     @functools.wraps(original)
     async def wrapper(*args, session=None, **kwargs):
         session = session or get_current_session()
         return await original(*args, session=session, **kwargs)
     return wrapper
 
+
+def _wrap_sync_classmethod(original):
+    """Wrap a sync classmethod to auto-inject session from context if not provided."""
+    @functools.wraps(original)
+    def wrapper(cls, *args, session=None, **kwargs):
+        session = session or get_current_session()
+        return original.__func__(cls, *args, session=session, **kwargs)
+    return classmethod(wrapper)
+
+
 def patch_beanie_document():
     """Apply session auto-injection to Document methods."""
-    for method_name in PATCHED_METHODS:
+    # Patch async methods
+    for method_name in ASYNC_METHODS:
         original = getattr(Document, method_name, None)
         if original is None:
             continue
-        
-        # Skip if already patched
         if getattr(original, "_session_patched", False):
             continue
         
         if isinstance(original, classmethod):
-            # Unwrap classmethod, wrap the function, re-wrap as classmethod
-            wrapped = _wrap_method(original.__func__)
+            wrapped = _wrap_async_method(original.__func__)
             wrapped._session_patched = True
             setattr(Document, method_name, classmethod(wrapped))
         elif inspect.iscoroutinefunction(original):
-            wrapped = _wrap_method(original)
+            wrapped = _wrap_async_method(original)
             wrapped._session_patched = True
             setattr(Document, method_name, wrapped)
+    
+    # Patch sync query builder methods (classmethods)
+    for method_name in SYNC_QUERY_METHODS:
+        original = getattr(Document, method_name, None)
+        if original is None:
+            continue
+        if getattr(original, "_session_patched", False):
+            continue
+        
+        wrapped = _wrap_sync_classmethod(original)
+        wrapped._session_patched = True
+        setattr(Document, method_name, wrapped)
+
 
 # Auto-patch on import
 patch_beanie_document()
