@@ -1,0 +1,9 @@
+**/*.egg-info
+**/__pycache__
+**/.pytest_cache
+**/*.sqlite3
+**/.ruff_cache
+build/
+dist/
+
+.DS_Store

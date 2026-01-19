@@ -1,0 +1,51 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Deployable Service Pratice",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"build":{
+		"dockerfile": "Dockerfile"
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		// For re-using docker build cache from host, and making service accessible from host when
+		// launch in dev container
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+	},
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"anthropic.claude-code",
+				"bierner.markdown-mermaid",
+				"github.copilot",
+				"github.copilot-chat",
+				"ms-azuretools.vscode-docker",
+				"ms-azuretools.vscode-containers",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-vscode.live-server",
+				"streetsidesoftware.code-spell-checker",
+				"yzhang.markdown-all-in-one"
+			]
+		}
+	},
+
+	// so that localhost inside the container maps to host machine
+	"runArgs": ["--network=host"],
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+
+	// Deliberately creating the same path inside dev container, since docker outside docker build
+	// would be using host path on image build time.
+	"onCreateCommand": "mkdir -p $(dirname {localWorkspaceFolder})",
+	"workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+	"workspaceFolder": "${localWorkspaceFolder}",
+
+	"shutdownAction": "none",
+
+	"postCreateCommand": "find . -name 'requirements.txt' -exec pip install -r {} \\; && pip install -e ./backend-fastapi[dev]"
+}
