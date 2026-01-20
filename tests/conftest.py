@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from pymongo.read_concern import ReadConcern
@@ -7,6 +10,12 @@ from src.context import session_context
 from src.database import get_client, init_db
 from src.config import MONGO_URI, MONGO_DB
 from src.main import app
+
+_TESTS_DIR = Path(__file__).resolve().parent
+if str(_TESTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TESTS_DIR))
+
+import beanie_patch  # noqa: F401 - test-only: patches Document to auto-inject session
 
 TEST_DB = f"test_{MONGO_DB}"
 

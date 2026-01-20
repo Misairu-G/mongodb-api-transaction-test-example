@@ -3,7 +3,6 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.config import MONGO_URI, MONGO_DB
-import src.beanie_patch  # noqa: F401 - patches Document to auto-inject session
 from src.users.models import User
 
 _client: Optional[AsyncIOMotorClient] = None
